@@ -1,7 +1,7 @@
 services:
 
   mssql_server_db_01:
-    image: usildevops/mssql-docker-enhanced
+    image: jrichardsz/sql-server-enhanced:ubuntu-22.04-sql.2022.rtm-cu3
     container_name: mssql_server_db_01
     shm_size: 1g
     ports:
@@ -25,7 +25,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   mssql_server_db_02:
-    image: usildevops/mssql-docker-enhanced
+    image: jrichardsz/sql-server-enhanced:ubuntu-22.04-sql.2022.rtm-cu3
     container_name: mssql_server_db_02
     shm_size: 1g
     ports:
