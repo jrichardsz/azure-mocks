@@ -1,0 +1,10 @@
+build
+node_modules
+rush
+dist
+design
+docs
+samples
+.env
+*.pfx
+*.crt

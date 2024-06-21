@@ -1,0 +1,118 @@
+services:
+
+  mssql_server_db_01:
+    image: usildevops/mssql-docker-enhanced
+    container_name: mssql_server_db_01
+    shm_size: 1g
+    ports:
+     - "1433:1433"
+    environment:
+      ACCEPT_EULA: 1
+      MSSQL_SA_PASSWORD: ${DATABASE_SQL_PASSWORD:-XSfXfDPvmYLQhEpb30@wYJoRybO#rc}
+      MSSQL_USER: ${DATABASE_SQL_USER:-SA}
+      TZ: America/Newyork
+    volumes:
+      - ./database/several-sql-server/01:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: cat /var/log/docker/sqlserver_db_init.log | grep [db_init_completed]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 20s    
+    networks:
+      - secret_rotator_v1_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mssql_server_db_02:
+    image: usildevops/mssql-docker-enhanced
+    container_name: mssql_server_db_02
+    shm_size: 1g
+    ports:
+     - "1434:1433"
+    environment:
+      ACCEPT_EULA: 1
+      MSSQL_SA_PASSWORD: ${DATABASE_SQL_PASSWORD:-XSfXfDPvmYLQhEpb30@wYJoRybO#rc}
+      MSSQL_USER: ${DATABASE_SQL_USER:-SA}
+      TZ: America/Newyork
+    volumes:
+      - ./database/several-sql-server/02:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: cat /var/log/docker/sqlserver_db_init.log | grep [db_init_completed]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 20s    
+    networks:
+      - secret_rotator_v1_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"      
+
+  azure-keyvault-core-mock:
+    image: nagyesta/lowkey-vault:2.4.13-ubi9-minimal
+    container_name: azure-keyvault-core-mock
+    ports:
+     - "8443:8443"
+    environment:
+      LOWKEY_VAULT_ALIASES: primary.localhost=${PUBLIC_ADDRESS}:8443
+      TZ: America/Newyork  
+    healthcheck:
+      test: curl https://localhost:8443/ping --insecure --fail || exit 1
+      interval: 5s
+      retries: 30
+      start_period: 10s
+      timeout: 10s 
+    networks:
+      - secret_rotator_v1_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  azure-managed-identities-mock:
+    image: nagyesta/assumed-identity:1.2.16
+    container_name: azure-managed-identities-mock
+    ports:
+     - "8090:80"
+    environment:
+      TZ: America/Newyork
+    healthcheck:
+      test: wget "http://127.0.0.1/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://foo:8443" || exit 1
+      interval: 5s
+      retries: 30
+      start_period: 10s
+      timeout: 10s    
+    networks:
+      - secret_rotator_v1_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  azure-keyvault-api:
+    build: ./azure-keyvault-api
+    image: azure-keyvault-api
+    container_name: azure-keyvault-api
+    ports:
+     - "2104:2104"
+    environment:
+      KEYVAULT_URI: https://${PUBLIC_ADDRESS}:8443
+      NODE_TLS_REJECT_UNAUTHORIZED: 0
+      AZURE_POD_IDENTITY_AUTHORITY_HOST: http://${PUBLIC_ADDRESS}:8090
+      INITIAL_SECRET_1: --name=DatabasePassword --value=5454VuSE1ux3 --tag:ValidityPeriodDays=90
+      INITIAL_SECRET_2: --name=acme-dev-team-login-secret --value=5454VuSE1ux3 --tag:ValidityPeriodDays=90
+      INITIAL_SECRET_3: --name=umbrella-dev-team-login-secret --value=OTk5YjRiMDZkOTllYjJmZWJhMjEwM --tag:ValidityPeriodDays=90
+      TZ: America/Newyork  
+    depends_on:
+        azure-keyvault-core-mock:
+            condition: service_healthy    
+    healthcheck:
+      test: curl --fail http://localhost:2104/health || exit 1
+      interval: 5s
+      retries: 30
+      start_period: 10s
+      timeout: 10s       
+    networks:
+      - secret_rotator_v1_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  secret_rotator_v1_network:
+    driver: bridge      
