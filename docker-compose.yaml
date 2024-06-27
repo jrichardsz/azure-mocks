@@ -1,0 +1,52 @@
+services:
+
+  mssql_server_db_01:
+    image: sql-server-enhanced:ubuntu-22.04-sql.2022.rtm-cu3
+    container_name: mssql_server_db_01
+    ports:
+     - "1433:1433"
+    environment:
+      ACCEPT_EULA: 1
+      MSSQL_SA_PASSWORD: ${DATABASE_SQL_PASSWORD:-XSfXfDPvmYLQhEpb30@wYJoRybO#rc}
+      MSSQL_USER: ${DATABASE_SQL_USER:-SA}
+      TZ: America/Newyork
+    volumes:
+      - ./database_1:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: cat /var/log/docker/sqlserver_db_init.log | grep db_init_completed -q
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 20s    
+
+  mssql_server_db_02:
+    image: sql-server-enhanced:ubuntu-22.04-sql.2022.rtm-cu3
+    container_name: mssql_server_db_02
+    ports:
+     - "1434:1433"
+    environment:
+      ACCEPT_EULA: 1
+      MSSQL_SA_PASSWORD: ${DATABASE_SQL_PASSWORD:-XSfXfDPvmYLQhEpb30@wYJoRybO#rc}
+      MSSQL_USER: ${DATABASE_SQL_USER:-SA}
+      TZ: America/Newyork
+    volumes:
+      - ./database_2:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: cat /var/log/docker/sqlserver_db_init.log | grep db_init_completed -q
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 20s    
+
+  smtp:
+    image: haravich/fake-smtp-server:1.0.1
+    container_name: smtp
+    deploy:
+      resources:
+        limits:
+          memory: 300M    
+    ports:
+     - "1025:1025"    
+     - "1080:1080"
+    environment:
+      TZ: America/Newyork

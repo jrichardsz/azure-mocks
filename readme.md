@@ -1,3 +1,7 @@
+# Requirements
+
+- docker
+
 # variables
 
 export PUBLIC_ADDRESS=
@@ -6,6 +10,4 @@ export PUBLIC_ADDRESS=
 
 - 1433
 - 1434
-- 8443
-- 8090
-- 2104
+- 1080
