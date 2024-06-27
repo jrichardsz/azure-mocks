@@ -5,6 +5,10 @@ services:
     container_name: mssql_server_db_01
     ports:
      - "1433:1433"
+    deploy:
+      resources:
+        limits:
+          memory: 800M
     environment:
       ACCEPT_EULA: 1
       MSSQL_SA_PASSWORD: ${DATABASE_SQL_PASSWORD:-XSfXfDPvmYLQhEpb30@wYJoRybO#rc}
@@ -24,6 +28,10 @@ services:
     container_name: mssql_server_db_02
     ports:
      - "1434:1433"
+    deploy:
+      resources:
+        limits:
+          memory: 800M
     environment:
       ACCEPT_EULA: 1
       MSSQL_SA_PASSWORD: ${DATABASE_SQL_PASSWORD:-XSfXfDPvmYLQhEpb30@wYJoRybO#rc}
@@ -44,7 +52,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 300M    
+          memory: 256M    
     ports:
      - "1025:1025"    
      - "1080:1080"
